@@ -144,7 +144,7 @@ export function AgentChat({
         >
           <ConversationTopFade className="top-14" />
           <ConversationContent className="mx-auto w-full max-w-3xl gap-6 px-4 pt-20 pb-36 sm:px-6">
-            {agent.data.messages.map(location(message, index) =>
+            {agent.data.messages.map((message, index) =>
               showPendingThinking &&
               isPendingAssistantShell &&
               message.id === lastMessage.id ? null : (
