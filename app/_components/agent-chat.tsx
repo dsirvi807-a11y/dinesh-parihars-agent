@@ -1,4 +1,4 @@
-"use client";.
+"use client";
 
 import type { UserContent } from "ai";
 import { useEveAgent } from "eve/react";
