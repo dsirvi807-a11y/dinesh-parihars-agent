@@ -2,7 +2,7 @@
 
 import type { UserContent } from "ai";
 import { useEveAgent } from "eve/react";
-import { AlertCircleIcon, BrainIcon, PlusIcon, SquareIcon } from "lucide-react";
+import { AlertCircleIcon, BrainIcon, PlusIcon, SearchIcon, SquareIcon } from "lucide-react";
 import { useState } from "react";
 import {
   Conversation,
@@ -21,6 +21,15 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { AgentMessage } from "./agent-message";
 
@@ -35,6 +44,8 @@ export function AgentChat({
 }) {
   const [cancellationError, setCancellationError] = useState<string>();
   const [hasInputText, setHasInputText] = useState(false);
+  const [productSearchOpen, setProductSearchOpen] = useState(false);
+  const [productQuery, setProductQuery] = useState("");
   const agent = useEveAgent({
     initialSession:
       sessionId === undefined
@@ -78,6 +89,15 @@ export function AgentChat({
     void agent.cancel().catch((error: unknown) => {
       setCancellationError(toErrorMessage(error));
     });
+  };
+
+  const handleProductSearch = async () => {
+    const query = productQuery.trim();
+    if (!query || isBusy || isResuming) return;
+    setProductSearchOpen(false);
+    setProductQuery("");
+    setCancellationError(undefined);
+    await agent.send(`Search products for: ${query}`);
   };
 
   const handleSubmit = async (message: PromptInputMessage) => {
@@ -127,9 +147,10 @@ export function AgentChat({
 
   return (
     <main className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
-      {showConversationLayout ? (
-        <ChatHeader canStartNewChat={activeSessionId !== undefined} />
-      ) : null}
+      <ChatHeader
+        canStartNewChat={activeSessionId !== undefined}
+        onProductSearch={() => setProductSearchOpen(true)}
+      />
 
       {showConversationLayout ? (
         <Conversation
@@ -168,6 +189,15 @@ export function AgentChat({
           <ConversationScrollButton />
         </Conversation>
       ) : null}
+
+      <ProductSearchDialog
+        open={productSearchOpen}
+        onOpenChange={setProductSearchOpen}
+        query={productQuery}
+        onQueryChange={setProductQuery}
+        onSearch={handleProductSearch}
+        disabled={isBusy || isResuming}
+      />
 
       <div
         className={cn(
@@ -218,6 +248,53 @@ function ComposerAction({
   );
 }
 
+function ProductSearchDialog({
+  open,
+  onOpenChange,
+  query,
+  onQueryChange,
+  onSearch,
+  disabled,
+}: {
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly query: string;
+  readonly onQueryChange: (query: string) => void;
+  readonly onSearch: () => void;
+  readonly disabled: boolean;
+}) {
+  return (
+    <Dialog onOpenChange={onOpenChange} open={open}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Search products</DialogTitle>
+          <DialogDescription>Find a product by name, SKU, or category.</DialogDescription>
+        </DialogHeader>
+        <form
+          className="flex flex-col gap-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onSearch();
+          }}
+        >
+          <Input
+            autoFocus
+            onChange={(event) => onQueryChange(event.currentTarget.value)}
+            placeholder="e.g. wireless headphones"
+            value={query}
+          />
+          <DialogFooter>
+            <Button disabled={!query.trim() || disabled} type="submit">
+              <SearchIcon data-icon="inline-start" />
+              Search products
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function ErrorMessage({ message }: { readonly message: string }) {
   return (
     <Message className="max-w-full" from="assistant">
@@ -237,24 +314,35 @@ function ErrorMessage({ message }: { readonly message: string }) {
   );
 }
 
-function ChatHeader({ canStartNewChat }: { readonly canStartNewChat: boolean }) {
+function ChatHeader({
+  canStartNewChat,
+  onProductSearch,
+}: {
+  readonly canStartNewChat: boolean;
+  readonly onProductSearch: () => void;
+}) {
   return (
     <header className="pointer-events-none fixed top-0 right-0 left-0 z-20 h-14">
       <div className="relative mx-auto flex h-full w-full max-w-3xl items-center justify-center bg-background px-24">
         <span className="truncate text-muted-foreground text-sm">{AGENT_NAME}</span>
-        {canStartNewChat ? (
-          <Button
-            aria-label="Start a new chat"
-            className="pointer-events-auto fixed top-3 right-6 pr-4"
-            onClick={() => window.location.assign("/s")}
-            size="sm"
-            type="button"
-            variant="ghost"
-          >
-            <PlusIcon className="size-4" />
-            <span className="hidden font-normal text-sm sm:inline">New chat</span>
+        <div className="pointer-events-auto fixed top-2.5 right-4 flex items-center gap-1 sm:right-6">
+          <Button aria-label="Search products" onClick={onProductSearch} size="sm" type="button" variant="ghost">
+            <SearchIcon data-icon="inline-start" />
+            <span className="hidden font-normal text-sm sm:inline">Products</span>
           </Button>
-        ) : null}
+          {canStartNewChat ? (
+            <Button
+              aria-label="Start a new chat"
+              onClick={() => window.location.assign("/s")}
+              size="sm"
+              type="button"
+              variant="ghost"
+            >
+              <PlusIcon data-icon="inline-start" />
+              <span className="hidden font-normal text-sm sm:inline">New chat</span>
+            </Button>
+          ) : null}
+        </div>
       </div>
     </header>
   );
