@@ -46,6 +46,7 @@ export function AgentChat({
   const [hasInputText, setHasInputText] = useState(false);
   const [productSearchOpen, setProductSearchOpen] = useState(false);
   const [productQuery, setProductQuery] = useState("");
+  const [websiteOnline, setWebsiteOnline] = useState(true);
   const agent = useEveAgent({
     initialSession:
       sessionId === undefined
@@ -147,9 +148,11 @@ export function AgentChat({
 
   return (
     <main className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
-      <ChatHeader
+        <ChatHeader
         canStartNewChat={activeSessionId !== undefined}
         onProductSearch={() => setProductSearchOpen(true)}
+        websiteOnline={websiteOnline}
+        onWebsiteOnlineChange={setWebsiteOnline}
       />
 
       {showConversationLayout ? (
@@ -317,15 +320,33 @@ function ErrorMessage({ message }: { readonly message: string }) {
 function ChatHeader({
   canStartNewChat,
   onProductSearch,
+  websiteOnline,
+  onWebsiteOnlineChange,
 }: {
   readonly canStartNewChat: boolean;
   readonly onProductSearch: () => void;
+  readonly websiteOnline: boolean;
+  readonly onWebsiteOnlineChange: (online: boolean) => void;
 }) {
   return (
     <header className="pointer-events-none fixed top-0 right-0 left-0 z-20 h-14">
       <div className="relative mx-auto flex h-full w-full max-w-3xl items-center justify-center bg-background px-24">
         <span className="truncate text-muted-foreground text-sm">{AGENT_NAME}</span>
-        <div className="pointer-events-auto fixed top-2.5 right-4 flex items-center gap-1 sm:right-6">
+        <div className="pointer-events-auto fixed top-2.5 right-4 flex items-center gap-2 sm:right-6">
+          <label className="flex items-center gap-2 text-muted-foreground text-xs" htmlFor="website-online">
+            <span>{websiteOnline ? "Online" : "Offline"}</span>
+            <Button
+              aria-pressed={websiteOnline}
+              aria-label={websiteOnline ? "Turn website offline" : "Turn website online"}
+              id="website-online"
+              onClick={() => onWebsiteOnlineChange(!websiteOnline)}
+              size="sm"
+              type="button"
+              variant={websiteOnline ? "default" : "outline"}
+            >
+              {websiteOnline ? "On" : "Off"}
+            </Button>
+          </label>
           <Button aria-label="Search products" onClick={onProductSearch} size="sm" type="button" variant="ghost">
             <SearchIcon data-icon="inline-start" />
             <span className="hidden font-normal text-sm sm:inline">Products</span>
