@@ -147,12 +147,10 @@ export function AgentChat({
 
   return (
     <main className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
-      {showConversationLayout ? (
-        <ChatHeader
-          canStartNewChat={activeSessionId !== undefined}
-          onProductSearch={() => setProductSearchOpen(true)}
-        />
-      ) : null}
+      <ChatHeader
+        canStartNewChat={activeSessionId !== undefined}
+        onProductSearch={() => setProductSearchOpen(true)}
+      />
 
       {showConversationLayout ? (
         <Conversation
