@@ -334,7 +334,7 @@ function ChatHeader({
         <span className="truncate text-muted-foreground text-sm">{AGENT_NAME}</span>
         <div className="pointer-events-auto fixed top-2.5 right-4 flex items-center gap-2 sm:right-6">
           <label className="flex items-center gap-2 text-muted-foreground text-xs" htmlFor="website-online">
-            <span>{websiteOnline ? "Online" : "Offline"}</span>
+            <span>Website {websiteOnline ? "On" : "Off"}</span>
             <Button
               aria-pressed={websiteOnline}
               aria-label={websiteOnline ? "Turn website offline" : "Turn website online"}
